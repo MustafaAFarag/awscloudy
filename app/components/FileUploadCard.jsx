@@ -13,6 +13,26 @@ export default function FileUploadCard() {
     setIsDragging(true);
   };
 
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://<YOUR_EC2_PUBLIC_IP>:3000/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      console.log("File uploaded:", data.url);
+
+      alert(`✅ File uploaded successfully!\nDownload URL:\n${data.url}`);
+    } catch (err) {
+      console.error("Upload failed", err);
+      alert("❌ Upload failed. Check your server.");
+    }
+  };
+
   const handleDragLeave = (e) => {
     e.preventDefault();
     setIsDragging(false);
@@ -34,14 +54,17 @@ export default function FileUploadCard() {
   };
 
   const handleFiles = (fileList) => {
-    const newFiles = Array.from(fileList).map((file) => ({
-      id: Math.random().toString(36).substring(2, 9),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      progress: Math.floor(Math.random() * 100), // Simulate random progress for demo
-      completed: file.size < 500000, // Simulate completed for small files
-    }));
+    const newFiles = Array.from(fileList).map((file) => {
+      uploadFile(file); // <-- Upload each file
+      return {
+        id: Math.random().toString(36).substring(2, 9),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        progress: 100, // Just show complete
+        completed: true,
+      };
+    });
 
     setFiles((prev) => [...prev, ...newFiles]);
   };
